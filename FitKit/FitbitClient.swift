@@ -1,0 +1,164 @@
+//
+//  Client.swift
+//  FitKit
+//
+//  Created by Ian Fijolek on 1/6/18.
+//  Copyright © 2018 iamthefij. All rights reserved.
+//
+
+import Foundation
+import Alamofire
+import OAuthSwift
+import Locksmith
+import OAuthSwiftAlamofire
+
+let ACCOUNT_NAME = "FitBit"
+let SERVICE_NAME = "FitKit"
+
+class FitbitClient {
+    private enum FitKitRequestError: Error {
+        case unableToParseResults
+    }
+
+    private var oauthClient: OAuth2Swift
+    private let consumerKey = "22CPJ4"
+    private let consumerSecret = "eb05e27f6aa224bcc1cf273119565b28"
+    private let callbackUrl = "fitkit://oauth-callback/fitbit"
+    private let authorizeUrl = "https://www.fitbit.com/oauth2/authorize"
+    private let accessTokenUrl = "https://api.fitbit.com/oauth2/token"
+    
+    init() {
+        // Init inner client
+        self.oauthClient = OAuth2Swift(
+            consumerKey: self.consumerKey,
+            consumerSecret: self.consumerSecret,
+            authorizeUrl: self.authorizeUrl,
+            accessTokenUrl: self.accessTokenUrl,
+            responseType: "token"
+        )
+        
+        // Set OAuth client to handle default sessions
+        let sessionManager = SessionManager.default
+        sessionManager.adapter = self.oauthClient.requestAdapter
+        sessionManager.retrier = self.oauthClient.requestAdapter
+    }
+    
+    func loadStoredTokens() {
+        NSLog("Someday we'll load stored credentials here! Today is not that day")
+        /*
+        let (oAuthData, _) = Locksmith.loadDataForUserAccount(userAccount: ACCOUNT_NAME, inService: SERVICE_NAME)
+        if let accessToken = oAuthData?.objectForKey("accessToken") {
+            // We have the token!!
+            self.oauthClient.client.credentials.oauthToken = accessToken
+        } else {
+            // No token! Boo
+        }
+        */
+    }
+    
+    /// Check if the current client is already authorized
+    ///
+    /// - Returns: True if the current client can make requests
+    func isAuthorized() -> Bool {
+        if self.oauthClient.client.credential.oauthToken != "" {
+            if self.oauthClient.client.credential.isTokenExpired() {
+                NSLog("Credentials are expired")
+                return false
+            }
+            return true
+        }
+        
+        // TODO: This should probably return true sometimes
+        return false
+    }
+    
+    /// Displays authorization screen for user in a Safari web view
+    ///
+    /// - Parameters:
+    ///   - viewController: the source controller to create the new Safari view
+    ///   - success: Callback to be executed on success
+    ///   - failure: Callback to be executed on failure
+    func authorize(viewController: UIViewController, success: @escaping () -> Void, failure: @escaping () -> Void) {
+        // Set webview handler
+        self.oauthClient.authorizeURLHandler = SafariURLHandler(
+            viewController: viewController,
+            oauthSwift: self.oauthClient
+        )
+        // Authorize
+        let _ = self.oauthClient.authorize(
+            withCallbackURL: URL(string: self.callbackUrl)!,
+            scope: "weight activity",
+            state:"FITKIT", // TODO: make CSRF token
+            success: {
+                credential, response, parameters in
+                NSLog("Succesfully authenticated with credentials %s", credential.oauthToken)
+                success()
+            },
+            failure: {
+                error in
+                // TODO: Maybe return the error
+                NSLog(error.localizedDescription)
+                failure()
+            }
+        )
+    }
+    
+    /// Request all weight data from Fitbit API for the current user beteween
+    /// two dates. Maximum allowed distance between the two dates is 31 days.
+    ///
+    /// - Parameters:
+    ///   - start: initial date to search from
+    ///   - end: last date to include in search
+    ///   - handler: function to handle the response
+    func getWeight(start: Date, end: Date, handler: @escaping (DataResponse<Any>) -> Void) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        let urlString = "https://api.fitbit.com/1/user/-/body/log/weight/date/\(dateFormatter.string(from: start))/\(dateFormatter.string(from: end)).json"
+
+        NSLog("Maing request to \(urlString)")
+
+
+        Alamofire.request(urlString)
+            .validate(contentType: ["application/json"])
+            .responseJSON(completionHandler: handler)
+    }
+
+    /// Handler that parses responses from Fitbit Weight API and provides
+    /// instances of FitbitWeight to a new callback.
+    ///
+    /// - Parameters:
+    ///   - response: Original DataResponse<Any> from the Fitbit request
+    ///   - callback: Callback that will accept a list of FitbitWeight instances
+    ///     and an Error if, if present.
+    class func weightResponseHandler(response: DataResponse<Any>, callback: @escaping ([FitbitWeight]?, Error?) -> Void) {
+        NSLog("Handling weight response \(response.debugDescription)")
+
+        guard response.result.isSuccess else {
+            NSLog("Error while fetching weight: \(response.result.error!)")
+            callback(nil, response.result.error)
+            return
+        }
+
+        NSLog("Got weight! \(response.result.value!)")
+
+        guard let results = response.result.value as? [String: Any] else {
+            print("Return result not in form [String: Any]")
+            callback(nil, FitKitRequestError.unableToParseResults)
+            return
+        }
+
+        guard let weights = results["weight"] as? [[String: Any]] else {
+            print("Return result does not contain a list of weights")
+            callback(nil, FitKitRequestError.unableToParseResults)
+            return
+        }
+
+        var fbWeights = [FitbitWeight]()
+        for weight in weights {
+            fbWeights.append(FitbitWeight(withResult: weight))
+        }
+
+        callback(fbWeights, nil)
+    }
+}
