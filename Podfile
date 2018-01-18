@@ -8,7 +8,7 @@ target 'FitKit' do
   use_frameworks!
 
   pod "Alamofire"
-  pod "Locksmith"
+  pod "SwiftKeychainWrapper"
   pod 'OAuthSwift', '~> 1.2.0'
   pod 'OAuthSwiftAlamofire'
 

@@ -9,11 +9,8 @@
 import Foundation
 import Alamofire
 import OAuthSwift
-import Locksmith
+import SwiftKeychainWrapper
 import OAuthSwiftAlamofire
-
-let ACCOUNT_NAME = "FitBit"
-let SERVICE_NAME = "FitKit"
 
 class FitbitClient {
     private enum FitKitRequestError: Error {
@@ -26,6 +23,7 @@ class FitbitClient {
     private let callbackUrl = "fitkit://oauth-callback/fitbit"
     private let authorizeUrl = "https://www.fitbit.com/oauth2/authorize"
     private let accessTokenUrl = "https://api.fitbit.com/oauth2/token"
+    private var keychainWrapper: KeychainWrapper
     
     init() {
         // Init inner client
@@ -41,19 +39,33 @@ class FitbitClient {
         let sessionManager = SessionManager.default
         sessionManager.adapter = self.oauthClient.requestAdapter
         sessionManager.retrier = self.oauthClient.requestAdapter
+
+        // Use standard KeychainWrapper
+        self.keychainWrapper = KeychainWrapper.standard
+
+        // Attempt to load tokens
+        self.loadStoredTokens()
     }
     
     func loadStoredTokens() {
-        NSLog("Someday we'll load stored credentials here! Today is not that day")
-        /*
-        let (oAuthData, _) = Locksmith.loadDataForUserAccount(userAccount: ACCOUNT_NAME, inService: SERVICE_NAME)
-        if let accessToken = oAuthData?.objectForKey("accessToken") {
-            // We have the token!!
-            self.oauthClient.client.credentials.oauthToken = accessToken
-        } else {
-            // No token! Boo
+        if let credential = self.readCredential() {
+            NSLog("Using credential from Keychain")
+            self.oauthClient.client.credential.oauthToken = credential.oauthToken
+            self.oauthClient.client.credential.oauthTokenExpiresAt = credential.oauthTokenExpiresAt
         }
-        */
+    }
+
+    func readCredential() -> OAuthSwiftCredential? {
+        if let credential = self.keychainWrapper.object(forKey: "credential") as? OAuthSwiftCredential {
+            NSLog("Found credential in keychain")
+            return credential
+        }
+        NSLog("No credential found in keychain")
+        return nil
+    }
+
+    private func storeCredential(_ credential: OAuthSwiftCredential) -> Bool {
+        return self.keychainWrapper.set(credential, forKey: "credential")
     }
     
     /// Check if the current client is already authorized
@@ -91,7 +103,17 @@ class FitbitClient {
             state:"FITKIT", // TODO: make CSRF token
             success: {
                 credential, response, parameters in
-                NSLog("Succesfully authenticated with credentials %s", credential.oauthToken)
+                // Verify state is consistent
+                guard parameters["state"] as? String == "FITKIT",
+                    let scope = parameters["scope"] as? String
+                    else {
+                        NSLog("Invalid authorization response")
+                        failure()
+                        return
+                }
+                NSLog("Authorized scope: \(scope)")
+                NSLog("Succesfully authenticated with credentials \(credential.oauthToken)")
+                let _ = self.storeCredential(credential)
                 success()
             },
             failure: {
@@ -143,13 +165,13 @@ class FitbitClient {
         NSLog("Got weight! \(response.result.value!)")
 
         guard let results = response.result.value as? [String: Any] else {
-            print("Return result not in form [String: Any]")
+            NSLog("Return result not in form [String: Any]")
             callback(nil, FitKitRequestError.unableToParseResults)
             return
         }
 
         guard let weights = results["weight"] as? [[String: Any]] else {
-            print("Return result does not contain a list of weights")
+            NSLog("Return result does not contain a list of weights")
             callback(nil, FitKitRequestError.unableToParseResults)
             return
         }

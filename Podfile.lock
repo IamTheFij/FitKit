@@ -1,23 +1,23 @@
 PODS:
   - Alamofire (4.5.1)
-  - Locksmith (4.0.0)
   - OAuthSwift (1.2.0)
   - OAuthSwiftAlamofire (0.1.0):
     - Alamofire
     - OAuthSwift
+  - SwiftKeychainWrapper (3.0.1)
 
 DEPENDENCIES:
   - Alamofire
-  - Locksmith
   - OAuthSwift (~> 1.2.0)
   - OAuthSwiftAlamofire
+  - SwiftKeychainWrapper
 
 SPEC CHECKSUMS:
   Alamofire: 2d95912bf4c34f164fdfc335872e8c312acaea4a
-  Locksmith: e9bebbaaa4cee3c511bc358a44f843c3fe00e21f
   OAuthSwift: 7fd6855b8e4d58eb5a30d156ea9bed7a8aecd1ca
   OAuthSwiftAlamofire: 20bb998ac506f82c3bab0625fbc98a9c6fca783f
+  SwiftKeychainWrapper: 38952a3636320ae61bad3513cadd870929de7a4a
 
-PODFILE CHECKSUM: 114ede9ace3efbf5222b8790a77f72e973a10d2b
+PODFILE CHECKSUM: 949ba8ae3b42c5e2974df2d2a6db5effc0cc78a8
 
 COCOAPODS: 1.2.0

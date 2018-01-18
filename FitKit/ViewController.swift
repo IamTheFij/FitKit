@@ -45,6 +45,9 @@ class ViewController: UIViewController {
             // TODO: Do something with the result and error
             if !self.client.isAuthorized() {
                 self.client.authorize(viewController: self, success: self.authorized, failure: self.unauthroized)
+            } else {
+                // TODO: this should be made significantly more clear
+                self.displayWeight()
             }
         }
     }
@@ -65,7 +68,6 @@ class ViewController: UIViewController {
         self.client.getWeight(start: lastMonth, end: today) {
             response in FitbitClient.weightResponseHandler(response: response) {
                 fbWeights, error in
-
                 if let error = error {
                     NSLog("Unable to get weights: \(error)")
                     return
@@ -76,6 +78,7 @@ class ViewController: UIViewController {
                         NSLog("Got Weight: \(fbWeight.logId): \(fbWeight.date) \(fbWeight.weight)")
                         HealthKitHelper.maybeSaveSample(fbWeight, callback: {_,_ in})
                     }
+                    self.outputText.text = "Health data is synced"
                 }
             }
         }
