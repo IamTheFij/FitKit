@@ -15,6 +15,7 @@ import OAuthSwiftAlamofire
 class FitbitClient {
     private enum FitKitRequestError: Error {
         case unableToParseResults
+        case invalidAuthorization
     }
 
     private var oauthClient: OAuth2Swift
@@ -24,6 +25,7 @@ class FitbitClient {
     private let authorizeUrl = "https://www.fitbit.com/oauth2/authorize"
     private let accessTokenUrl = "https://api.fitbit.com/oauth2/token"
     private var keychainWrapper: KeychainWrapper
+    private let keychainCredKey = "credential"
     
     init() {
         // Init inner client
@@ -44,10 +46,11 @@ class FitbitClient {
         self.keychainWrapper = KeychainWrapper.standard
 
         // Attempt to load tokens
-        self.loadStoredTokens()
+        self.maybeLoadStoredCredential()
     }
     
-    func loadStoredTokens() {
+    /// Attempts to load and use stored credentials
+    func maybeLoadStoredCredential() {
         if let credential = self.readCredential() {
             NSLog("Using credential from Keychain")
             self.oauthClient.client.credential.oauthToken = credential.oauthToken
@@ -55,8 +58,11 @@ class FitbitClient {
         }
     }
 
+    /// Attempts to read OAuthSwiftCredential from the keychain
+    ///
+    /// - Returns: If a valid credential is found, it will be returned
     func readCredential() -> OAuthSwiftCredential? {
-        if let credential = self.keychainWrapper.object(forKey: "credential") as? OAuthSwiftCredential {
+        if let credential = self.keychainWrapper.object(forKey: keychainCredKey) as? OAuthSwiftCredential {
             NSLog("Found credential in keychain")
             return credential
         }
@@ -64,10 +70,21 @@ class FitbitClient {
         return nil
     }
 
+    /// Persists an OAuthSwiftCredential into the keychain
+    ///
+    /// - Parameter credential: credential to be persisted
+    /// - Returns: TRUE if persisted successfully
     private func storeCredential(_ credential: OAuthSwiftCredential) -> Bool {
-        return self.keychainWrapper.set(credential, forKey: "credential")
+        return self.keychainWrapper.set(credential, forKey: keychainCredKey)
     }
-    
+
+    /// Clears credential token and expiration
+    func clearCredential() {
+        self.oauthClient.client.credential.oauthToken = ""
+        self.oauthClient.client.credential.oauthTokenExpiresAt = nil
+        self.keychainWrapper.removeObject(forKey: keychainCredKey)
+    }
+
     /// Check if the current client is already authorized
     ///
     /// - Returns: True if the current client can make requests
@@ -90,12 +107,13 @@ class FitbitClient {
     ///   - viewController: the source controller to create the new Safari view
     ///   - success: Callback to be executed on success
     ///   - failure: Callback to be executed on failure
-    func authorize(viewController: UIViewController, success: @escaping () -> Void, failure: @escaping () -> Void) {
+    func authorize(viewController: UIViewController, callback: @escaping (String?, Error?) -> Void) {
         // Set webview handler
         self.oauthClient.authorizeURLHandler = SafariURLHandler(
             viewController: viewController,
             oauthSwift: self.oauthClient
         )
+
         // Authorize
         let _ = self.oauthClient.authorize(
             withCallbackURL: URL(string: self.callbackUrl)!,
@@ -108,19 +126,18 @@ class FitbitClient {
                     let scope = parameters["scope"] as? String
                     else {
                         NSLog("Invalid authorization response")
-                        failure()
+                        callback(nil, FitKitRequestError.invalidAuthorization)
                         return
                 }
                 NSLog("Authorized scope: \(scope)")
                 NSLog("Succesfully authenticated with credentials \(credential.oauthToken)")
                 let _ = self.storeCredential(credential)
-                success()
+                callback(scope, nil)
             },
             failure: {
                 error in
-                // TODO: Maybe return the error
-                NSLog(error.localizedDescription)
-                failure()
+                NSLog("Error authorizing \(error.localizedDescription)")
+                callback(nil, error)
             }
         )
     }
