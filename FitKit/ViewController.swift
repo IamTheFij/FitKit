@@ -32,12 +32,14 @@ class ViewController: UIViewController {
     }
 
     fileprivate func updateAuthorizedLabel() {
-        if self.client.isAuthorized() {
-            self.loggedIn.text = "Logged In"
-            //self.loginButton.currentTitle = "Log Out"
-        } else {
-            self.loggedIn.text = "Not Logged In"
-            //self.loginButton.currentTitle = "Log In"
+        DispatchQueue.main.async {
+            if self.client.isAuthorized() {
+                self.loggedIn.text = "Logged In"
+                //self.loginButton.currentTitle = "Log Out"
+            } else {
+                self.loggedIn.text = "Not Logged In"
+                //self.loginButton.currentTitle = "Log In"
+            }
         }
     }
 
@@ -62,12 +64,9 @@ class ViewController: UIViewController {
             NSLog("Authorized for scope: \(scope). Requesting HealthKit access")
             HealthKitHelper.authorizeHealthKit() {
                 result, error in
-                // TODO: Do something with the result and error
-                if error != nil {
-                    callback(false)
-                } else {
-                    callback(true)
-                }
+                // TODO: Enforce that access was provided or display an error
+                NSLog("Error authing HealthKit: \(error.debugDescription)")
+                callback(result)
             }
         }
     }
@@ -76,6 +75,8 @@ class ViewController: UIViewController {
         self.updateAuthorizedLabel()
         if authSuccess {
             self.syncWeights()
+        } else {
+            self.outputText.text = "Error connecting to Fitbit or authorizing"
         }
     }
 
@@ -94,7 +95,7 @@ class ViewController: UIViewController {
 
                 if let fbWeights = fbWeights {
                     for fbWeight in fbWeights {
-                        NSLog("Got Weight: \(fbWeight.logId): \(fbWeight.date) \(fbWeight.weight)")
+                        NSLog("Got Weight with ID: \(fbWeight.logId)")
                         HealthKitHelper.maybeSaveSample(fbWeight, callback: {_,_ in})
                     }
                     self.outputText.text = "Health data is synced"
