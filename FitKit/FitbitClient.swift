@@ -19,8 +19,8 @@ class FitbitClient {
     }
 
     private var oauthClient: OAuth2Swift
-    private let consumerKey = "22CPJ4"
-    private let consumerSecret = "eb05e27f6aa224bcc1cf273119565b28"
+    private var consumerKey = "invalid-key"  // Set in Fitkit/Secrets.plist
+    private var consumerSecret = "invalid-secret"  // Set in Fitkit/Secrets.plist
     private let callbackUrl = "fitkit://oauth-callback/fitbit"
     private let authorizeUrl = "https://www.fitbit.com/oauth2/authorize"
     private let accessTokenUrl = "https://api.fitbit.com/oauth2/token"
@@ -29,6 +29,15 @@ class FitbitClient {
     
     init() {
         // Init inner client
+        if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+            let secrets = NSDictionary(contentsOfFile: path),
+            let fitbitCreds = secrets["Fitbit Credentials"] as? NSDictionary,
+            let consumerKey = fitbitCreds["Consumer Key"] as? String,
+            let consumerSecret = fitbitCreds["Consumer Secret"] as? String
+        {
+            self.consumerKey = consumerKey
+            self.consumerSecret = consumerSecret
+        }
         self.oauthClient = OAuth2Swift(
             consumerKey: self.consumerKey,
             consumerSecret: self.consumerSecret,

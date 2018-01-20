@@ -69,3 +69,4 @@ Pods/
 Carthage/Build
 
 .DS_Store
+FitKit/Secrets.plist

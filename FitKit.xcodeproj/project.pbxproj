@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0C314390200143FE00E214BA /* FitbitClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C31438F200143FE00E214BA /* FitbitClient.swift */; };
+		0CB282D02012F4CA004E355E /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0CB282CF2012F4CA004E355E /* Secrets.plist */; };
 		0CC8D443200C69EF00480D5D /* FitbitWeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC8D442200C69EF00480D5D /* FitbitWeight.swift */; };
 		0CC8D446200C6EB900480D5D /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CC8D445200C6EB900480D5D /* HealthKit.framework */; };
 		0CC8D448200C73D000480D5D /* HealthKitHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC8D447200C73D000480D5D /* HealthKitHelper.swift */; };
@@ -21,6 +22,7 @@
 
 /* Begin PBXFileReference section */
 		0C31438F200143FE00E214BA /* FitbitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitbitClient.swift; sourceTree = "<group>"; };
+		0CB282CF2012F4CA004E355E /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		0CC8D442200C69EF00480D5D /* FitbitWeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitbitWeight.swift; sourceTree = "<group>"; };
 		0CC8D444200C6EB900480D5D /* FitKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitKit.entitlements; sourceTree = "<group>"; };
 		0CC8D445200C6EB900480D5D /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -81,6 +83,7 @@
 				0CC990F620013C3D00624436 /* Info.plist */,
 				0CC8D442200C69EF00480D5D /* FitbitWeight.swift */,
 				0CC8D447200C73D000480D5D /* HealthKitHelper.swift */,
+				0CB282CF2012F4CA004E355E /* Secrets.plist */,
 			);
 			path = FitKit;
 			sourceTree = "<group>";
@@ -170,6 +173,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CB282D02012F4CA004E355E /* Secrets.plist in Resources */,
 				0CC990F520013C3D00624436 /* LaunchScreen.storyboard in Resources */,
 				0CC990F220013C3D00624436 /* Assets.xcassets in Resources */,
 				0CC990F020013C3D00624436 /* Main.storyboard in Resources */,
