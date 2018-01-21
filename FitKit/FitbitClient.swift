@@ -168,6 +168,7 @@ class FitbitClient {
 
 
         Alamofire.request(urlString)
+            .validate()
             .validate(contentType: ["application/json"])
             .responseJSON(completionHandler: handler)
     }

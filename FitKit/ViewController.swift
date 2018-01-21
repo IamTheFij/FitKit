@@ -11,7 +11,7 @@ import HealthKit
 import UIKit
 
 class ViewController: UIViewController {
-    
+
     @IBOutlet var loggedIn: UILabel!
     @IBOutlet var outputText: UITextView!
     let client = FitbitClient()
@@ -88,8 +88,18 @@ class ViewController: UIViewController {
             response in FitbitClient.weightResponseHandler(response: response) {
                 fbWeights, error in
                 if let error = error {
-                    NSLog("Unable to get weights: \(error)")
+                    NSLog("Unable to get weights: \(error.localizedDescription)")
+                    if let error = error as? AFError {
+                        if let suggestion = error.recoverySuggestion {
+                            NSLog("Suggestion to resolve: \(suggestion)")
+                        }
+                        if error.responseCode == 401 {
+                            NSLog("Unauthorized. Clearing credentials")
+                            self.client.clearCredential()
+                        }
+                    }
                     self.outputText.text = "Error getting weights"
+
                     return
                 }
 
