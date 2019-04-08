@@ -22,7 +22,13 @@
                                 <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                 <items>
-                                    <navigationItem title="FitKit" id="2jc-hB-lMj"/>
+                                    <navigationItem title="FitKit" id="2jc-hB-lMj">
+                                        <barButtonItem key="rightBarButtonItem" title="Log Out" id="A20-nJ-4HO">
+                                            <connections>
+                                                <action selector="logOut:" destination="BYZ-38-t0r" id="ohP-Rh-eHV"/>
+                                            </connections>
+                                        </barButtonItem>
+                                    </navigationItem>
                                 </items>
                             </navigationBar>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Logged In" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CoH-cd-flw">
@@ -39,6 +45,14 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qBL-XQ-4jZ">
+                                <rect key="frame" x="170" y="617" width="34" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <state key="normal" title="Sync"/>
+                                <connections>
+                                    <action selector="syncNow:" destination="BYZ-38-t0r" eventType="touchUpInside" id="50A-vo-aNS"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <accessibility key="accessibilityConfiguration">
@@ -47,6 +61,7 @@
                         <viewLayoutGuide key="safeArea" id="OGN-ry-fYp"/>
                     </view>
                     <connections>
+                        <outlet property="logInButton" destination="A20-nJ-4HO" id="wg9-Si-CdO"/>
                         <outlet property="loggedIn" destination="CoH-cd-flw" id="SUh-wA-KNF"/>
                         <outlet property="outputText" destination="IdY-jU-MBP" id="yl5-f9-Gws"/>
                     </connections>

@@ -14,6 +14,7 @@ class ViewController: UIViewController {
 
     @IBOutlet var loggedIn: UILabel!
     @IBOutlet var outputText: UITextView!
+    @IBOutlet var logInButton: UIBarButtonItem!
     let client = FitbitClient()
 
     override func viewDidLoad() {
@@ -35,14 +36,23 @@ class ViewController: UIViewController {
         DispatchQueue.main.async {
             if self.client.isAuthorized() {
                 self.loggedIn.text = "Logged In"
-                //self.loginButton.currentTitle = "Log Out"
+                self.logInButton.title = "Log Out"
             } else {
                 self.loggedIn.text = "Not Logged In"
-                //self.loginButton.currentTitle = "Log In"
+                self.logInButton.title = "Log In"
             }
         }
     }
 
+    @IBAction func logOut(_ sender: Any) {
+        NSLog("Log out!!!")
+        self.client.clearCredential()
+        self.updateAuthorizedLabel()
+    }
+    @IBAction func syncNow(_ sender: Any) {
+        NSLog("Sync button tapped")
+        self.syncWeights()
+    }
     /// Ensure that the client is authorized and then continue
     fileprivate func ensureAuthorized(callback: @escaping (Bool) -> Void) {
         // If already authroized, we can short circuit
